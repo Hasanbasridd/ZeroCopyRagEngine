@@ -1,5 +1,6 @@
 # 🦅 Ultra-Performance Zero-Copy RAG Engine (.NET 9 / C# 13)
 
+[![CI](https://github.com/Hasanbasridd/ZeroCopyRagEngine/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Hasanbasridd/ZeroCopyRagEngine/actions/workflows/ci.yml)
 [![Framework](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/download/dotnet/9.0)
 [![Language](https://img.shields.io/badge/C%23-13.0-blue.svg)](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-13)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
