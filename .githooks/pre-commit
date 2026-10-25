@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Cyber-Guard Pre-Commit Hook
+# Prevents memory-allocating methods in high-performance paths
+#
+# This hook is a fast local feedback loop only. The authoritative check is the
+# Roslyn heap-allocation analyzer (build error in Chunkers/ and VectorStores/),
+# which also runs in CI (.github/workflows/cyber-guard.yml) and therefore cannot
+# be bypassed with --no-verify.
+
+FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '(Chunkers|VectorStores)/.*\.cs$')
+
+if [ -z "$FILES" ]; then
+    exit 0
+fi
+
+# Check for banned methods
+REJECT=0
+for file in $FILES; do
+    if grep -q -E '\.Select\(|\.ToList\(|\.Split\(' "$file"; then
+        echo "🚨 CYBER-GUARD ALERT: Banned method (.Select, .ToList, or .Split) detected in $file"
+        echo "Commit rejected to maintain Zero-Copy & Zero-Allocation Discipline!"
+        REJECT=1
+    fi
+done
+
+if [ $REJECT -eq 1 ]; then
+    exit 1
+fi
+
+exit 0
