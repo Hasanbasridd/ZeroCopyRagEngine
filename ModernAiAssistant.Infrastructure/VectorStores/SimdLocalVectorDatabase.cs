@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics.Tensors;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ public sealed class SimdLocalVectorDatabase : IVectorDatabase
     private int _vectorCount;
     private readonly object _syncLock = new();
 
+    [SuppressMessage("Performance", "HAA0501", Justification = "Ingestion path, not the search hot path: the flattened store is grown once per upsert batch.")]
     public Task UpsertChunksAsync(IReadOnlyList<TextChunk> chunks, CancellationToken cancellationToken = default)
     {
         if (chunks.Count == 0) return Task.CompletedTask;
@@ -58,6 +60,7 @@ public sealed class SimdLocalVectorDatabase : IVectorDatabase
         return Task.CompletedTask;
     }
 
+    [SuppressMessage("Performance", "HAA0502", Justification = "Result materialization: one List<ScoredChunk> and topK ScoredChunk instances per query, required by the IVectorDatabase contract. The O(N) scoring loop itself does not allocate.")]
     public Task<IReadOnlyList<ScoredChunk>> SearchSimilarAsync(ReadOnlyMemory<float> queryVector, int topK, CancellationToken cancellationToken = default)
     {
         if (_vectorCount == 0)
