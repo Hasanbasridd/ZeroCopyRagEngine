@@ -482,3 +482,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Personal working notes (not public)
+ZeroCopyRagEngine-Yol-Haritasi.md
+03_Project_Logs/
+
