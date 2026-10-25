@@ -1,0 +1,21 @@
+root = true
+
+# Cyber-Guard (Madde 4.2): heap-allocation analyzer findings are build errors
+# in the hot paths. Intentional allocations must be suppressed with a
+# justified [SuppressMessage] attribute (see Madde 4.4).
+[ModernAiAssistant.Infrastructure/{Chunkers,VectorStores}/**.cs]
+dotnet_diagnostic.HAA0101.severity = error
+dotnet_diagnostic.HAA0102.severity = error
+dotnet_diagnostic.HAA0201.severity = error
+dotnet_diagnostic.HAA0202.severity = error
+dotnet_diagnostic.HAA0301.severity = error
+dotnet_diagnostic.HAA0302.severity = error
+dotnet_diagnostic.HAA0303.severity = error
+dotnet_diagnostic.HAA0401.severity = error
+dotnet_diagnostic.HAA0501.severity = error
+dotnet_diagnostic.HAA0502.severity = error
+dotnet_diagnostic.HAA0503.severity = error
+dotnet_diagnostic.HAA0506.severity = error
+dotnet_diagnostic.HAA0601.severity = error
+dotnet_diagnostic.HAA0602.severity = error
+dotnet_diagnostic.HAA0603.severity = error

@@ -1,0 +1,35 @@
+name: Cyber-Guard
+
+# Server-side enforcement of the zero-allocation rules (Madde 4.3).
+# Runs the Roslyn heap-allocation analyzer, so `git commit --no-verify`
+# cannot bypass it.
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+jobs:
+  allocation-analyzer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore ModernAiAssistant.RagEngine.sln
+
+      - name: Build (HAA* diagnostics in Chunkers/ and VectorStores/ are errors)
+        run: dotnet build ModernAiAssistant.RagEngine.sln --no-restore -c Release
+
+      - name: Banned-method scan (same rule as .githooks/pre-commit)
+        run: |
+          if grep -rnE '\.Select\(|\.ToList\(|\.Split\(' \
+               ModernAiAssistant.Infrastructure/Chunkers \
+               ModernAiAssistant.Infrastructure/VectorStores; then
+            echo "🚨 CYBER-GUARD ALERT: Banned method detected in hot path."
+            exit 1
+          fi
