@@ -32,10 +32,10 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore
-        run: dotnet restore ModernAiAssistant.RagEngine.sln
+        run: dotnet restore ZeroCopyRagEngine.sln
 
       - name: Build
-        run: dotnet build ModernAiAssistant.RagEngine.sln -c Release --no-restore
+        run: dotnet build ZeroCopyRagEngine.sln -c Release --no-restore
 
       - name: Test
-        run: dotnet test ModernAiAssistant.RagEngine.sln -c Release --no-build
+        run: dotnet test ZeroCopyRagEngine.sln -c Release --no-build

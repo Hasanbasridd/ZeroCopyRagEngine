@@ -1,6 +1,0 @@
-@ModernAiAssistant.Presentation_HostAddress = http://localhost:5199
-
-GET {{ModernAiAssistant.Presentation_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

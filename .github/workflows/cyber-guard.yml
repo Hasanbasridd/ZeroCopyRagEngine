@@ -20,16 +20,16 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore
-        run: dotnet restore ModernAiAssistant.RagEngine.sln
+        run: dotnet restore ZeroCopyRagEngine.sln
 
       - name: Build (HAA* diagnostics in Chunkers/ and VectorStores/ are errors)
-        run: dotnet build ModernAiAssistant.RagEngine.sln --no-restore -c Release
+        run: dotnet build ZeroCopyRagEngine.sln --no-restore -c Release
 
       - name: Banned-method scan (same rule as .githooks/pre-commit)
         run: |
           if grep -rnE '\.Select\(|\.ToList\(|\.Split\(' \
-               ModernAiAssistant.Infrastructure/Chunkers \
-               ModernAiAssistant.Infrastructure/VectorStores; then
+               ZeroCopyRagEngine.Infrastructure/Chunkers \
+               ZeroCopyRagEngine.Infrastructure/VectorStores; then
             echo "🚨 CYBER-GUARD ALERT: Banned method detected in hot path."
             exit 1
           fi
