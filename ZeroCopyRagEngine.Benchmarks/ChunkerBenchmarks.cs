@@ -14,6 +14,8 @@ namespace ZeroCopyRagEngine.Benchmarks;
 public class ChunkerBenchmarks
 {
     private readonly ZeroCopySemanticOverlapChunker _zeroCopyChunker = new();
+    private readonly TokenAwareZeroCopyChunker _tokenAwareChunker = new();
+    private readonly MarkdownHierarchyZeroCopyChunker _markdownChunker = new();
     private ReadOnlyMemory<char> _text;
     private string _rawText = string.Empty;
     private Range[] _preallocatedRanges = null!;
@@ -80,6 +82,7 @@ public class ChunkerBenchmarks
                     currentChunkSize = lastSpace + 1;
             }
 
+            // Allocates a new string per chunk (standard naive approach)
             chunks.Add(span.Slice(currentIndex, currentChunkSize).ToString());
 
             if (currentIndex + currentChunkSize >= span.Length)
@@ -89,6 +92,17 @@ public class ChunkerBenchmarks
         }
 
         return chunks.Count;
+    }
+
+    [Benchmark(Description = "Baseline 3: Microsoft.ML.Tokenizers TokenAwareZeroCopyChunker")]
+    public int MicrosoftMlTokenizerChunker()
+    {
+        int count = 0;
+        foreach (var chunk in _tokenAwareChunker.ChunkText(_text, 100, 20))
+        {
+            count += chunk.Length > 0 ? 1 : 0;
+        }
+        return count;
     }
 
     [Benchmark(Description = "ZeroCopySemanticOverlapChunker (IEnumerable<ReadOnlyMemory<char>>)")]
@@ -106,5 +120,16 @@ public class ChunkerBenchmarks
     public int ZeroCopySpanDestinationBuffer()
     {
         return _zeroCopyChunker.ChunkTextSpan(_rawText.AsSpan(), 100, 20, _preallocatedRanges);
+    }
+
+    [Benchmark(Description = "MarkdownHierarchyZeroCopyChunker (Structure-Aware)")]
+    public int MarkdownHierarchyZeroCopyChunking()
+    {
+        int count = 0;
+        foreach (var chunk in _markdownChunker.ChunkText(_text, 100, 20))
+        {
+            count += chunk.Length > 0 ? 1 : 0;
+        }
+        return count;
     }
 }
