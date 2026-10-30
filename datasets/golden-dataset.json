@@ -1,0 +1,499 @@
+{
+  "version": "1.0",
+  "description": "Golden evaluation dataset for ZeroCopyRagEngine (35 corpus documents and 35 evaluation queries with expected chunk IDs, graded relevance, and reference answers).",
+  "documents": [
+    {
+      "chunkId": "doc01",
+      "fileName": "0001-span-arraypool-chunking.md",
+      "source": "adr",
+      "tags": ["chunking", "span", "arraypool"],
+      "content": "# Span and ArrayPool Chunking\nZeroCopySemanticOverlapChunker computes chunk boundaries on ReadOnlySpan<char> using a pooled ArrayPool<Range> buffer and returns ReadOnlyMemory<char> slices without allocating substring copies on the managed heap."
+    },
+    {
+      "chunkId": "doc02",
+      "fileName": "0002-flattened-simd-vector-store.md",
+      "source": "adr",
+      "tags": ["simd", "vector-store", "cosine"],
+      "content": "# Flattened SIMD Vector Store\nSimdLocalVectorDatabase stores all float32 embeddings contiguously in a single row-major float[] array and scores cosine similarity via TensorPrimitives.CosineSimilarity using AVX2, AVX-512, or ARM NEON hardware intrinsics."
+    },
+    {
+      "chunkId": "doc03",
+      "fileName": "0003-sse-streaming.md",
+      "source": "adr",
+      "tags": ["sse", "streaming", "http"],
+      "content": "# Server-Sent Events Streaming\nChatRetrievalService streams generated LLM tokens via IAsyncEnumerable<string> to ChatController, which flushes each token immediately as a text/event-stream data frame to minimize time-to-first-token (TTFT)."
+    },
+    {
+      "chunkId": "doc04",
+      "fileName": "cyber-guard.md",
+      "source": "architecture",
+      "tags": ["cyber-guard", "roslyn", "ci"],
+      "content": "# Cyber-Guard Zero-Allocation Gate\nCyber-Guard enforces heap allocation discipline in Chunkers and VectorStores across three layers: ClrHeapAllocationAnalyzer rules HAA0101-HAA0603 as build errors in .editorconfig, GitHub Actions CI workflow, and a versioned .githooks/pre-commit script."
+    },
+    {
+      "chunkId": "doc05",
+      "fileName": "memory-mapped-vectors.md",
+      "source": "architecture",
+      "tags": ["mmap", "persistence", "zero-copy"],
+      "content": "# Memory-Mapped Vector Persistence\nMemoryMappedVectorDatabase writes contiguous float32 vectors after a 16-byte ZCRV binary header and maps the file into virtual address space via MemoryMappedFile and SafeMemoryMappedViewHandle, scanning OS page cache directly as ReadOnlySpan<float>."
+    },
+    {
+      "chunkId": "doc06",
+      "fileName": "int8-quantization.md",
+      "source": "architecture",
+      "tags": ["quantization", "int8", "memory"],
+      "content": "# Int8 Scalar Quantization\nInt8QuantizedVectorDatabase compresses 32-bit floating point embeddings into 8-bit signed integers (sbyte[-127..127]) with a per-vector scale factor maxAbs/127, reducing vector memory footprint by 4x while preserving high Recall@10."
+    },
+    {
+      "chunkId": "doc07",
+      "fileName": "hnsw-ann-index.md",
+      "source": "architecture",
+      "tags": ["hnsw", "ann", "graph"],
+      "content": "# HNSW Approximate Nearest Neighbor Index\nHnswVectorDatabase builds a multi-layer navigable small world proximity graph parameterized by M, efConstruction, and efSearch, performing greedy upper-layer descent and layer-0 beam search for logarithmic O(log N) query latency."
+    },
+    {
+      "chunkId": "doc08",
+      "fileName": "bm25-lexical-index.md",
+      "source": "architecture",
+      "tags": ["bm25", "lexical", "inverted-index"],
+      "content": "# Okapi BM25 Inverted Index\nBm25InvertedIndex maintains term posting lists and document lengths, scoring keyword queries with k1=1.5 and b=0.75 using inverse document frequency and length-normalized term frequency saturation."
+    },
+    {
+      "chunkId": "doc09",
+      "fileName": "hybrid-rrf-fusion.md",
+      "source": "architecture",
+      "tags": ["hybrid", "rrf", "fusion"],
+      "content": "# Reciprocal Rank Fusion (RRF)\nReciprocalRankFusion merges dense SIMD vector rankings and sparse BM25 lexical rankings using the formula RRF(d) = sum(1 / (k + rank(d))) with constant k=60, eliminating score calibration mismatches between cosine similarity and BM25."
+    },
+    {
+      "chunkId": "doc10",
+      "fileName": "cross-encoder-reranking.md",
+      "source": "architecture",
+      "tags": ["reranking", "cross-encoder", "precision"],
+      "content": "# Candidate Reranking\nLexicalCrossEncoderReranker refines top candidate chunks from first-stage retrieval by evaluating unigram coverage, bigram proximity, and exact query phrase matches alongside initial retrieval scores."
+    },
+    {
+      "chunkId": "doc11",
+      "fileName": "metadata-filtering.md",
+      "source": "architecture",
+      "tags": ["metadata", "filtering", "tags"],
+      "content": "# Metadata Filtering\nMetadataFilter restricts vector and BM25 search candidates by FileId, Source, CreatedAt timestamp bounds (MinCreatedAt and MaxCreatedAt), and RequiredTags before top-K selection."
+    },
+    {
+      "chunkId": "doc12",
+      "fileName": "token-aware-chunker.md",
+      "source": "architecture",
+      "tags": ["tokenizer", "chunking", "wordpiece"],
+      "content": "# Token-Aware Zero-Copy Chunker\nTokenAwareZeroCopyChunker uses Microsoft.ML.Tokenizers WordPieceTokenizer to compute exact token character offsets and slices the source ReadOnlyMemory<char> buffer along token and sentence boundaries without allocating substring copies."
+    },
+    {
+      "chunkId": "doc13",
+      "fileName": "markdown-hierarchy-chunker.md",
+      "source": "architecture",
+      "tags": ["markdown", "chunking", "headers"],
+      "content": "# Markdown Hierarchy Zero-Copy Chunker\nMarkdownHierarchyZeroCopyChunker preserves document structure by prioritizing Markdown heading boundaries (#, ##, ###) and double-newline paragraph breaks before falling back to sentence and word boundaries."
+    },
+    {
+      "chunkId": "doc14",
+      "fileName": "document-loaders.md",
+      "source": "architecture",
+      "tags": ["loader", "pdf", "markdown", "txt"],
+      "content": "# Format-Aware Document Loaders\nPlainTextDocumentLoader, MarkdownDocumentLoader, and PdfDocumentLoader implement IDocumentLoader to extract structured PageContent slices with section headers and page numbers from .txt, .md, and .pdf streams."
+    },
+    {
+      "chunkId": "doc15",
+      "fileName": "microsoft-extensions-ai.md",
+      "source": "architecture",
+      "tags": ["meai", "abstractions", "clean-architecture"],
+      "content": "# Microsoft.Extensions.AI Alignment\nMeaiChatClientLlmAdapter and MeaiEmbeddingServiceAdapter bridge Microsoft.Extensions.AI IChatClient and IEmbeddingGenerator<string, Embedding<float>> interfaces to Domain ports without polluting ZeroCopyRagEngine.Domain with external dependencies."
+    },
+    {
+      "chunkId": "doc16",
+      "fileName": "ollama-provider.md",
+      "source": "providers",
+      "tags": ["ollama", "local-llm", "embeddings"],
+      "content": "# Ollama Provider Integration\nOllamaChatClient streams tokens from the local Ollama /api/chat endpoint and OllamaEmbeddingGenerator generates dense vector embeddings via /api/embed using models such as llama3.2 and nomic-embed-text."
+    },
+    {
+      "chunkId": "doc17",
+      "fileName": "openai-provider.md",
+      "source": "providers",
+      "tags": ["openai", "cloud-llm", "embeddings"],
+      "content": "# OpenAI Provider Integration\nOpenAiChatClient streams Server-Sent Events deltas from /v1/chat/completions and OpenAiEmbeddingGenerator requests embeddings from /v1/embeddings using models such as gpt-4o-mini and text-embedding-3-small."
+    },
+    {
+      "chunkId": "doc18",
+      "fileName": "opentelemetry-observability.md",
+      "source": "operations",
+      "tags": ["opentelemetry", "metrics", "tracing"],
+      "content": "# OpenTelemetry Tracing and Metrics\nRagTelemetry exposes ActivitySource spans and Meter instruments including rag.ingestion.duration_ms histogram, rag.retrieval.latency_ms histogram, rag.llm.streamed_tokens counter, and rag.security.prompt_injection_sanitized counter."
+    },
+    {
+      "chunkId": "doc19",
+      "fileName": "correlation-id-logging.md",
+      "source": "operations",
+      "tags": ["logging", "correlation-id", "middleware"],
+      "content": "# Structured Logging and Correlation ID\nCorrelationIdMiddleware reads or generates an X-Correlation-ID HTTP header on every request, attaches it to the response headers, and opens a structured logging scope so all log entries for a request share the same trace correlation identifier."
+    },
+    {
+      "chunkId": "doc20",
+      "fileName": "http-resilience.md",
+      "source": "operations",
+      "tags": ["resilience", "retry", "circuit-breaker", "timeout"],
+      "content": "# HTTP Resilience Pipeline\nHttpResilienceHandler protects outbound LLM and embedding HTTP calls with per-attempt request timeouts, exponential backoff retries on transient 5xx/429 errors, and a circuit breaker that opens after consecutive failures."
+    },
+    {
+      "chunkId": "doc21",
+      "fileName": "sse-cancellation.md",
+      "source": "operations",
+      "tags": ["cancellation", "sse", "disconnect"],
+      "content": "# End-to-End Cancellation Propagation\nChatController passes HttpContext.RequestAborted CancellationToken through ChatRetrievalService, IEmbeddingService, IVectorDatabase, and ILLMService so client disconnection immediately halts LLM token generation."
+    },
+    {
+      "chunkId": "doc22",
+      "fileName": "health-ready-probes.md",
+      "source": "operations",
+      "tags": ["health", "readiness", "kubernetes"],
+      "content": "# Health and Readiness Probes\nThe Presentation Web API exposes /health liveness and /ready readiness endpoints backed by ASP.NET Core HealthChecks verifying vector database and retrieval pipeline availability."
+    },
+    {
+      "chunkId": "doc23",
+      "fileName": "api-key-authentication.md",
+      "source": "security",
+      "tags": ["security", "auth", "api-key"],
+      "content": "# API Key Authentication\nApiKeyAuthenticationMiddleware validates the X-Api-Key request header or Bearer token against Security:ApiKey configured via environment variables or user-secrets when RequireAuthentication is enabled."
+    },
+    {
+      "chunkId": "doc24",
+      "fileName": "rate-limiting.md",
+      "source": "security",
+      "tags": ["security", "rate-limit", "dos"],
+      "content": "# ASP.NET Core Rate Limiting\nFixed-window rate limiting middleware protects /api/chat endpoints using Security:PermitLimitPerMinute, rejecting excessive client requests with HTTP 429 Too Many Requests."
+    },
+    {
+      "chunkId": "doc25",
+      "fileName": "input-size-limits.md",
+      "source": "security",
+      "tags": ["security", "validation", "limits"],
+      "content": "# Query and Upload Size Limits\nRagSecurityOptions enforces MaxQueryLength (default 2000 characters), MaxChunkCount (default 1000 chunks), and MaxUploadSizeBytes (default 10 MB), returning HTTP 400 Bad Request when limits are exceeded."
+    },
+    {
+      "chunkId": "doc26",
+      "fileName": "indirect-prompt-injection.md",
+      "source": "security",
+      "tags": ["security", "prompt-injection", "sanitizer"],
+      "content": "# Indirect Prompt Injection Defense\nPromptSanitizer isolates retrieved document chunks inside <untrusted_context> XML tags and redacts embedded instruction-override payloads such as 'ignore previous instructions' or closing tag breakouts before constructing the LLM system prompt."
+    },
+    {
+      "chunkId": "doc27",
+      "fileName": "memory-bandwidth-physics.md",
+      "source": "benchmarks",
+      "tags": ["benchmarks", "bandwidth", "dram"],
+      "content": "# Memory Bandwidth Analysis for Flat Vector Search\nScanning 100,000 float32 vectors of dimension 384 reads 153.6 MB from DRAM per query. Because single-core desktop DDR4/DDR5 bandwidth is 25-50 GB/s, a physically realistic single-threaded flat scan takes 3 to 8 milliseconds."
+    },
+    {
+      "chunkId": "doc28",
+      "fileName": "topk-span-selection.md",
+      "source": "benchmarks",
+      "tags": ["benchmarks", "topk", "zero-allocation"],
+      "content": "# Allocation-Free Top-K Selection\nTopKSelector maintains a sorted buffer of the top K similarity scores in-place on Span<float> and Span<int> during the single O(N) scan, avoiding Array.Sort over all N scores and eliminating Comparer<float> heap allocations."
+    },
+    {
+      "chunkId": "doc29",
+      "fileName": "allocation-budget.md",
+      "source": "benchmarks",
+      "tags": ["gc", "allocation-budget", "memory"],
+      "content": "# Request Allocation Budget\nWhile chunk boundary calculation and SIMD similarity scoring loops allocate 0 bytes on the GC heap, a full HTTP request still allocates the iterator state machine, query embedding array, top-K ScoredChunk list, StringBuilder prompt, and SSE UTF-8 token buffers."
+    },
+    {
+      "chunkId": "doc30",
+      "fileName": "docker-deployment.md",
+      "source": "devops",
+      "tags": ["docker", "compose", "ollama"],
+      "content": "# Multi-Stage Docker and Compose Deployment\nThe repository includes a multi-stage Dockerfile targeting .NET 9 SDK and ASP.NET runtime images and a docker-compose.yml that orchestrates ZeroCopyRagEngine alongside an Ollama container."
+    },
+    {
+      "chunkId": "doc31",
+      "fileName": "ci-cd-pipeline.md",
+      "source": "devops",
+      "tags": ["ci", "coverage", "github-actions"],
+      "content": "# Continuous Integration and Coverage\nThe .github/workflows/ci.yml workflow runs dotnet restore, Release build with Roslyn heap-allocation analyzers, xUnit tests with Coverlet code coverage collection, and automated RAG evaluation regression checks."
+    },
+    {
+      "chunkId": "doc32",
+      "fileName": "rag-evaluation-metrics.md",
+      "source": "evaluation",
+      "tags": ["evaluation", "recall", "mrr", "ndcg"],
+      "content": "# Retrieval Evaluation Metrics\nRagEvaluator computes Recall@K, Mean Reciprocal Rank (MRR@K), and Normalized Discounted Cumulative Gain (nDCG@K) over the golden dataset, alongside LLM-as-judge Faithfulness and Answer Relevance scores."
+    },
+    {
+      "chunkId": "doc33",
+      "fileName": "openapi-documentation.md",
+      "source": "presentation",
+      "tags": ["openapi", "swagger", "rest"],
+      "content": "# OpenAPI Specification\nZeroCopyRagEngine.Presentation exposes an OpenAPI v1 specification at /openapi/v1.json describing the POST /api/chat/ask-stream endpoint, health probes, and request schemas."
+    },
+    {
+      "chunkId": "doc34",
+      "fileName": "clean-architecture-layers.md",
+      "source": "architecture",
+      "tags": ["clean-architecture", "domain", "ports"],
+      "content": "# Clean Architecture Layering\nZeroCopyRagEngine is structured into Domain (zero external dependencies, entities, and ports), Application (use cases, RRF fusion, telemetry, security), Infrastructure (SIMD stores, chunkers, BM25, providers), and Presentation (ASP.NET Core API and UI)."
+    },
+    {
+      "chunkId": "doc35",
+      "fileName": "secret-management.md",
+      "source": "security",
+      "tags": ["security", "secrets", "configuration"],
+      "content": "# Secret Management Policy\nNo API keys or credentials are stored in appsettings.json or git history; sensitive values such as Security:ApiKey and AiProvider:ApiKey are supplied exclusively through environment variables or .NET user-secrets."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q01",
+      "question": "How does ZeroCopySemanticOverlapChunker avoid substring heap allocations during text chunking?",
+      "expectedChunkIds": ["doc01"],
+      "relevanceGrades": { "doc01": 3, "doc12": 1 },
+      "referenceAnswer": "ZeroCopySemanticOverlapChunker computes chunk boundaries on ReadOnlySpan<char> using a pooled ArrayPool<Range> buffer and returns ReadOnlyMemory<char> slices without allocating substring copies."
+    },
+    {
+      "id": "q02",
+      "question": "Which BCL API and hardware intrinsics does SimdLocalVectorDatabase use for cosine similarity?",
+      "expectedChunkIds": ["doc02"],
+      "relevanceGrades": { "doc02": 3, "doc28": 1 },
+      "referenceAnswer": "SimdLocalVectorDatabase stores embeddings in a contiguous row-major float[] array and scores cosine similarity with TensorPrimitives.CosineSimilarity using AVX2, AVX-512, or ARM NEON intrinsics."
+    },
+    {
+      "id": "q03",
+      "question": "How are generated LLM tokens streamed to the browser to minimize time-to-first-token?",
+      "expectedChunkIds": ["doc03"],
+      "relevanceGrades": { "doc03": 3, "doc21": 1 },
+      "referenceAnswer": "ChatRetrievalService returns IAsyncEnumerable<string> and ChatController flushes each token immediately as a Server-Sent Events (text/event-stream) data frame."
+    },
+    {
+      "id": "q04",
+      "question": "What are the three enforcement layers of Cyber-Guard for zero-allocation discipline?",
+      "expectedChunkIds": ["doc04"],
+      "relevanceGrades": { "doc04": 3, "doc31": 1 },
+      "referenceAnswer": "Cyber-Guard enforces allocation discipline via ClrHeapAllocationAnalyzer build errors in .editorconfig, GitHub Actions CI checks, and a versioned .githooks/pre-commit script."
+    },
+    {
+      "id": "q05",
+      "question": "How does MemoryMappedVectorDatabase read persisted vectors from disk without copying them into managed arrays?",
+      "expectedChunkIds": ["doc05"],
+      "relevanceGrades": { "doc05": 3, "doc02": 1 },
+      "referenceAnswer": "MemoryMappedVectorDatabase stores contiguous float32 vectors after a 16-byte ZCRV header and maps the file via MemoryMappedFile and SafeMemoryMappedViewHandle to scan OS page cache directly as ReadOnlySpan<float>."
+    },
+    {
+      "id": "q06",
+      "question": "How does Int8QuantizedVectorDatabase achieve a 4x memory reduction for vector storage?",
+      "expectedChunkIds": ["doc06"],
+      "relevanceGrades": { "doc06": 3 },
+      "referenceAnswer": "Int8QuantizedVectorDatabase quantizes 32-bit float embeddings into 8-bit signed sbyte values in [-127..127] with a per-vector scale factor maxAbs/127."
+    },
+    {
+      "id": "q07",
+      "question": "How does HnswVectorDatabase achieve logarithmic O(log N) approximate nearest neighbor search?",
+      "expectedChunkIds": ["doc07"],
+      "relevanceGrades": { "doc07": 3 },
+      "referenceAnswer": "HnswVectorDatabase builds a multi-layer navigable small world proximity graph parameterized by M, efConstruction, and efSearch, performing greedy upper-layer descent followed by layer-0 beam search."
+    },
+    {
+      "id": "q08",
+      "question": "Which scoring parameters and algorithm does Bm25InvertedIndex use for lexical keyword search?",
+      "expectedChunkIds": ["doc08"],
+      "relevanceGrades": { "doc08": 3, "doc09": 1 },
+      "referenceAnswer": "Bm25InvertedIndex uses Okapi BM25 over term posting lists and document lengths with parameters k1=1.5 and b=0.75."
+    },
+    {
+      "id": "q09",
+      "question": "How does ReciprocalRankFusion combine dense vector search and sparse BM25 results?",
+      "expectedChunkIds": ["doc09"],
+      "relevanceGrades": { "doc09": 3, "doc08": 1 },
+      "referenceAnswer": "ReciprocalRankFusion merges rankings using the formula RRF(d) = sum(1 / (k + rank(d))) with constant k=60."
+    },
+    {
+      "id": "q10",
+      "question": "How does LexicalCrossEncoderReranker refine first-stage retrieval candidates?",
+      "expectedChunkIds": ["doc10"],
+      "relevanceGrades": { "doc10": 3 },
+      "referenceAnswer": "LexicalCrossEncoderReranker scores unigram term coverage, bigram proximity, and exact query phrase matches combined with the first-stage similarity score."
+    },
+    {
+      "id": "q11",
+      "question": "Which fields can MetadataFilter use to restrict vector and BM25 search candidates?",
+      "expectedChunkIds": ["doc11"],
+      "relevanceGrades": { "doc11": 3 },
+      "referenceAnswer": "MetadataFilter filters candidates by FileId, Source, CreatedAt timestamp bounds (MinCreatedAt and MaxCreatedAt), and RequiredTags."
+    },
+    {
+      "id": "q12",
+      "question": "How does TokenAwareZeroCopyChunker size chunks by token count while staying zero-copy?",
+      "expectedChunkIds": ["doc12"],
+      "relevanceGrades": { "doc12": 3, "doc01": 1 },
+      "referenceAnswer": "TokenAwareZeroCopyChunker uses Microsoft.ML.Tokenizers WordPieceTokenizer to obtain token character offsets and slices the original ReadOnlyMemory<char> buffer without allocating substrings."
+    },
+    {
+      "id": "q13",
+      "question": "What boundary priority order does MarkdownHierarchyZeroCopyChunker use when splitting Markdown documents?",
+      "expectedChunkIds": ["doc13"],
+      "relevanceGrades": { "doc13": 3, "doc01": 1 },
+      "referenceAnswer": "MarkdownHierarchyZeroCopyChunker prioritizes Markdown heading boundaries (#, ##, ###), then double-newline paragraph breaks, and finally sentence and word boundaries."
+    },
+    {
+      "id": "q14",
+      "question": "Which document formats are supported by the IDocumentLoader implementations?",
+      "expectedChunkIds": ["doc14"],
+      "relevanceGrades": { "doc14": 3 },
+      "referenceAnswer": "PlainTextDocumentLoader, MarkdownDocumentLoader, and PdfDocumentLoader support .txt, .md, and .pdf files."
+    },
+    {
+      "id": "q15",
+      "question": "How does the project align with Microsoft.Extensions.AI without adding external dependencies to the Domain layer?",
+      "expectedChunkIds": ["doc15"],
+      "relevanceGrades": { "doc15": 3, "doc34": 1 },
+      "referenceAnswer": "MeaiChatClientLlmAdapter and MeaiEmbeddingServiceAdapter in Infrastructure adapt IChatClient and IEmbeddingGenerator<string, Embedding<float>> to the dependency-free Domain ports."
+    },
+    {
+      "id": "q16",
+      "question": "Which HTTP endpoints and default models do OllamaChatClient and OllamaEmbeddingGenerator use?",
+      "expectedChunkIds": ["doc16"],
+      "relevanceGrades": { "doc16": 3 },
+      "referenceAnswer": "OllamaChatClient calls /api/chat with llama3.2 and OllamaEmbeddingGenerator calls /api/embed with nomic-embed-text."
+    },
+    {
+      "id": "q17",
+      "question": "Which OpenAI endpoints and models are used by OpenAiChatClient and OpenAiEmbeddingGenerator?",
+      "expectedChunkIds": ["doc17"],
+      "relevanceGrades": { "doc17": 3 },
+      "referenceAnswer": "OpenAiChatClient streams from /v1/chat/completions with gpt-4o-mini and OpenAiEmbeddingGenerator calls /v1/embeddings with text-embedding-3-small."
+    },
+    {
+      "id": "q18",
+      "question": "What OpenTelemetry metrics and histograms are exported by RagTelemetry?",
+      "expectedChunkIds": ["doc18"],
+      "relevanceGrades": { "doc18": 3 },
+      "referenceAnswer": "RagTelemetry exports rag.ingestion.duration_ms, rag.retrieval.latency_ms, rag.llm.streamed_tokens, and rag.security.prompt_injection_sanitized."
+    },
+    {
+      "id": "q19",
+      "question": "How does CorrelationIdMiddleware propagate trace correlation identifiers across requests and logs?",
+      "expectedChunkIds": ["doc19"],
+      "relevanceGrades": { "doc19": 3 },
+      "referenceAnswer": "CorrelationIdMiddleware reads or generates the X-Correlation-ID header, echoes it on the response, and opens a structured logging scope."
+    },
+    {
+      "id": "q20",
+      "question": "How does HttpResilienceHandler protect outbound LLM and embedding HTTP calls from transient failures?",
+      "expectedChunkIds": ["doc20"],
+      "relevanceGrades": { "doc20": 3 },
+      "referenceAnswer": "HttpResilienceHandler applies per-attempt request timeouts, exponential backoff retries on 5xx and 429 responses, and a circuit breaker."
+    },
+    {
+      "id": "q21",
+      "question": "What happens when a client disconnects during an active Server-Sent Events (SSE) stream?",
+      "expectedChunkIds": ["doc21"],
+      "relevanceGrades": { "doc21": 3, "doc03": 1 },
+      "referenceAnswer": "HttpContext.RequestAborted CancellationToken is propagated through ChatRetrievalService and ILLMService, immediately stopping token generation."
+    },
+    {
+      "id": "q22",
+      "question": "Which health check endpoints are exposed by the Presentation Web API?",
+      "expectedChunkIds": ["doc22"],
+      "relevanceGrades": { "doc22": 3 },
+      "referenceAnswer": "The Presentation Web API exposes /health for liveness and /ready for readiness probes."
+    },
+    {
+      "id": "q23",
+      "question": "How does ApiKeyAuthenticationMiddleware authenticate incoming API requests?",
+      "expectedChunkIds": ["doc23"],
+      "relevanceGrades": { "doc23": 3, "doc35": 1 },
+      "referenceAnswer": "ApiKeyAuthenticationMiddleware validates the X-Api-Key header or Bearer token against Security:ApiKey when RequireAuthentication is enabled."
+    },
+    {
+      "id": "q24",
+      "question": "How does the API defend against request flooding and denial-of-service on chat endpoints?",
+      "expectedChunkIds": ["doc24"],
+      "relevanceGrades": { "doc24": 3 },
+      "referenceAnswer": "ASP.NET Core fixed-window rate limiting middleware enforces Security:PermitLimitPerMinute and returns HTTP 429 Too Many Requests when exceeded."
+    },
+    {
+      "id": "q25",
+      "question": "What input size limits are enforced by RagSecurityOptions?",
+      "expectedChunkIds": ["doc25"],
+      "relevanceGrades": { "doc25": 3 },
+      "referenceAnswer": "RagSecurityOptions enforces MaxQueryLength (2000 chars), MaxChunkCount (1000 chunks), and MaxUploadSizeBytes (10 MB)."
+    },
+    {
+      "id": "q26",
+      "question": "How does PromptSanitizer defend against indirect prompt injection hidden inside retrieved chunks?",
+      "expectedChunkIds": ["doc26"],
+      "relevanceGrades": { "doc26": 3 },
+      "referenceAnswer": "PromptSanitizer wraps chunks inside <untrusted_context> XML tags and redacts instruction-override patterns like 'ignore previous instructions' before building the LLM prompt."
+    },
+    {
+      "id": "q27",
+      "question": "Why is a 1.2 ms single-threaded scan over 100,000 float32 vectors of dimension 384 physically implausible on desktop DRAM?",
+      "expectedChunkIds": ["doc27"],
+      "relevanceGrades": { "doc27": 3 },
+      "referenceAnswer": "100,000 x 384 x 4 bytes equals 153.6 MB per scan; scanning that in 1.2 ms requires ~128 GB/s, exceeding single-core desktop DDR4/DDR5 bandwidth of 25-50 GB/s where realistic latency is 3-8 ms."
+    },
+    {
+      "id": "q28",
+      "question": "How does TopKSelector eliminate Comparer<float> allocations and full O(N log N) sorting during vector search?",
+      "expectedChunkIds": ["doc28"],
+      "relevanceGrades": { "doc28": 3, "doc02": 1 },
+      "referenceAnswer": "TopKSelector maintains a sorted top-K buffer in-place on Span<float> and Span<int> during the single O(N) similarity scan."
+    },
+    {
+      "id": "q29",
+      "question": "Which stages of a full RAG request allocate on the managed heap according to the Allocation Budget?",
+      "expectedChunkIds": ["doc29"],
+      "relevanceGrades": { "doc29": 3 },
+      "referenceAnswer": "The iterator state machine, query embedding float[], top-K ScoredChunk list, StringBuilder system prompt, and per-token SSE UTF-8 buffers allocate on the heap, while the chunk boundary loop and similarity scoring loop allocate 0 bytes."
+    },
+    {
+      "id": "q30",
+      "question": "How is ZeroCopyRagEngine packaged for containerized deployment with a local LLM?",
+      "expectedChunkIds": ["doc30"],
+      "relevanceGrades": { "doc30": 3 },
+      "referenceAnswer": "A multi-stage Dockerfile builds and runs the .NET 9 API, and docker-compose.yml orchestrates the API container together with an Ollama service."
+    },
+    {
+      "id": "q31",
+      "question": "What automated checks are executed in the .github/workflows/ci.yml pipeline?",
+      "expectedChunkIds": ["doc31"],
+      "relevanceGrades": { "doc31": 3, "doc04": 1 },
+      "referenceAnswer": "The CI workflow executes dotnet restore, Release build with Roslyn heap-allocation analyzers, xUnit tests with Coverlet code coverage, and RAG evaluation regression checks."
+    },
+    {
+      "id": "q32",
+      "question": "Which retrieval and answer quality metrics are computed by RagEvaluator?",
+      "expectedChunkIds": ["doc32"],
+      "relevanceGrades": { "doc32": 3 },
+      "referenceAnswer": "RagEvaluator computes Recall@K, Mean Reciprocal Rank (MRR@K), and Normalized Discounted Cumulative Gain (nDCG@K) for retrieval, plus Faithfulness and Answer Relevance for answer quality."
+    },
+    {
+      "id": "q33",
+      "question": "Where is the OpenAPI specification exposed in ZeroCopyRagEngine.Presentation?",
+      "expectedChunkIds": ["doc33"],
+      "relevanceGrades": { "doc33": 3 },
+      "referenceAnswer": "The OpenAPI v1 specification is exposed at /openapi/v1.json."
+    },
+    {
+      "id": "q34",
+      "question": "How are responsibilities divided across the four Clean Architecture layers in ZeroCopyRagEngine?",
+      "expectedChunkIds": ["doc34"],
+      "relevanceGrades": { "doc34": 3, "doc15": 1 },
+      "referenceAnswer": "Domain holds dependency-free entities and ports, Application orchestrates retrieval use cases and security/telemetry, Infrastructure provides SIMD stores, chunkers, BM25, and AI adapters, and Presentation hosts the ASP.NET Core Web API and UI."
+    },
+    {
+      "id": "q35",
+      "question": "How are sensitive credentials such as API keys managed in ZeroCopyRagEngine?",
+      "expectedChunkIds": ["doc35"],
+      "relevanceGrades": { "doc35": 3, "doc23": 1 },
+      "referenceAnswer": "No secrets are committed to appsettings.json or git; Security:ApiKey and AiProvider:ApiKey are loaded from environment variables or .NET user-secrets."
+    }
+  ]
+}
+
