@@ -1,6 +1,6 @@
 @ZeroCopyRagEngine.Presentation_HostAddress = http://localhost:5199
 
-GET {{ZeroCopyRagEngine.Presentation_HostAddress}}/weatherforecast/
+GET {{ZeroCopyRagEngine.Presentation_HostAddress}}/health
 Accept: application/json
 
 ###
