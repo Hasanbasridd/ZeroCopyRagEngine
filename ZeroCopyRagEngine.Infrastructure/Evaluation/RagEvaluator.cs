@@ -5,8 +5,11 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using ZeroCopyRagEngine.Application.Services;
 using ZeroCopyRagEngine.Domain.Entities;
 using ZeroCopyRagEngine.Domain.Ports;
+using ZeroCopyRagEngine.Infrastructure.BM25;
+using ZeroCopyRagEngine.Infrastructure.Reranking;
 
 namespace ZeroCopyRagEngine.Infrastructure.Evaluation;
 
@@ -82,6 +85,10 @@ public interface ILlmAnswerJudge
         CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Deterministic grounding and relevance judge for reproducible CI and local evaluation runs.
+/// Measures token grounding of the answer against retrieved context (Faithfulness) and reference answer/question overlap (AnswerRelevance).
+/// </summary>
 public sealed class DeterministicGroundingJudge : ILlmAnswerJudge
 {
     public Task<(double Faithfulness, double AnswerRelevance)> ScoreAnswerAsync(
@@ -296,6 +303,16 @@ public static class RagEvaluator
 
         await vectorDatabase.UpsertChunksAsync(chunksToIngest, cancellationToken);
 
+        IBm25Index? bm25 = null;
+        if (useHybridBm25)
+        {
+            bm25 = new Bm25InvertedIndex();
+            bm25.IndexChunks(chunksToIngest);
+        }
+
+        IReranker? reranker = useReranker ? new LexicalCrossEncoderReranker() : null;
+        var retrievalService = new HybridRetrievalService(embeddingService, vectorDatabase, bm25, reranker);
+
         double totalRecall = 0;
         double totalMrr = 0;
         double totalNdcg = 0;
@@ -306,15 +323,14 @@ public static class RagEvaluator
         for (int q = 0; q < dataset.Questions.Count; q++)
         {
             var question = dataset.Questions[q];
-            float[] queryEmb = await embeddingService.GenerateEmbeddingAsync(question.Question.AsMemory(), cancellationToken);
-            var retrieved = await vectorDatabase.SearchSimilarAsync(queryEmb, topK: k, cancellationToken: cancellationToken);
+            var retrieved = await retrievalService.RetrieveAsync(question.Question, topK: k, cancellationToken: cancellationToken);
 
             totalRecall += CalculateRecallAtK(retrieved, question.ExpectedChunkIds, k);
             totalMrr += CalculateMrrAtK(retrieved, question.ExpectedChunkIds, k);
             totalNdcg += CalculateNdcgAtK(retrieved, question.RelevanceGrades, k);
 
             string topContext = retrieved.Count > 0 ? retrieved[0].Chunk.Content.Span.ToString() : string.Empty;
-            string synthesizedAnswer = topContext;
+            string synthesizedAnswer = topContext; // Extractive grounded answer from top retrieved context
             var (faith, rel) = await judge.ScoreAnswerAsync(
                 question.Question,
                 topContext,

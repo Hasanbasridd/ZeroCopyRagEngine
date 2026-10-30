@@ -5,7 +5,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
+using ZeroCopyRagEngine.Application.Services;
 using ZeroCopyRagEngine.Domain.Entities;
+using ZeroCopyRagEngine.Infrastructure.BM25;
+using ZeroCopyRagEngine.Infrastructure.Reranking;
 using ZeroCopyRagEngine.Infrastructure.VectorStores;
 
 namespace ZeroCopyRagEngine.Tests;
@@ -100,6 +103,50 @@ public class VectorStoreAndHybridTests
     }
 
     [Fact]
+    public async Task Bm25_And_ReciprocalRankFusion_Should_Produce_Deterministic_Known_Ranking()
+    {
+        var meta = new DocumentMetadata("f1", "doc.md", 1, 0);
+        var c1 = new TextChunk("doc_A", "HAA0601 boxing allocation error in Roslyn analyzer".AsMemory(), new float[] { 1f, 0f }, meta);
+        var c2 = new TextChunk("doc_B", "HAA0601 HAA0601 value type boxing diagnostic rule".AsMemory(), new float[] { 0.8f, 0.2f }, meta);
+        var c3 = new TextChunk("doc_C", "Unrelated Kubernetes deployment manifest".AsMemory(), new float[] { 0f, 1f }, meta);
+
+        var bm25 = new Bm25InvertedIndex();
+        bm25.IndexChunks(new[] { c1, c2, c3 });
+
+        var bm25Results = bm25.Search("HAA0601 boxing".AsSpan(), topK: 3);
+        bm25Results.Should().HaveCount(2);
+        // doc_B has higher term frequency for HAA0601 and shorter length
+        bm25Results[0].Chunk.ChunkId.Should().Be("doc_B");
+        bm25Results[1].Chunk.ChunkId.Should().Be("doc_A");
+
+        // Known RRF example:
+        // Vector ranks: [doc_A (rank 1), doc_C (rank 2), doc_B (rank 3)]
+        // BM25 ranks:   [doc_B (rank 1), doc_A (rank 2)]
+        // With kConstant=60:
+        // score(doc_A) = 1/(60+1) + 1/(60+2) = 1/61 + 1/62 = 0.0325224
+        // score(doc_B) = 1/(60+3) + 1/(60+1) = 1/63 + 1/61 = 0.0322665
+        // score(doc_C) = 1/(60+2)            = 1/62        = 0.0161290
+        var vectorList = new List<ScoredChunk>
+        {
+            new(c1, 0.99f),
+            new(c3, 0.70f),
+            new(c2, 0.65f)
+        };
+        var lexicalList = new List<ScoredChunk>
+        {
+            new(c2, 4.2f),
+            new(c1, 3.1f)
+        };
+
+        var fused = ReciprocalRankFusion.Fuse(vectorList, lexicalList, topK: 3, kConstant: 60);
+        fused.Select(f => f.Chunk.ChunkId).Should().Equal("doc_A", "doc_B", "doc_C");
+
+        var reranker = new LexicalCrossEncoderReranker();
+        var reranked = await reranker.RerankAsync("HAA0601 value type boxing", fused, topK: 2);
+        reranked.Should().HaveCount(2);
+    }
+
+    [Fact]
     public async Task MetadataFilter_Should_Filter_By_FileId_Source_DateRange_And_RequiredTags()
     {
         var now = DateTimeOffset.UtcNow;
@@ -112,10 +159,12 @@ public class VectorStoreAndHybridTests
         var flat = new SimdLocalVectorDatabase();
         var int8 = new Int8QuantizedVectorDatabase();
         var hnsw = new HnswVectorDatabase();
+        var bm25 = new Bm25InvertedIndex();
 
         await flat.UpsertChunksAsync(new[] { chunkOld, chunkNew });
         await int8.UpsertChunksAsync(new[] { chunkOld, chunkNew });
         await hnsw.UpsertChunksAsync(new[] { chunkOld, chunkNew });
+        bm25.IndexChunks(new[] { chunkOld, chunkNew });
 
         var filterProd = new MetadataFilter(
             FileId: "file_new",
@@ -127,5 +176,6 @@ public class VectorStoreAndHybridTests
         (await flat.SearchSimilarAsync(new float[] { 1f, 0f }, 5, filterProd)).Should().ContainSingle(x => x.Chunk.ChunkId == "c_new");
         (await int8.SearchSimilarAsync(new float[] { 1f, 0f }, 5, filterProd)).Should().ContainSingle(x => x.Chunk.ChunkId == "c_new");
         (await hnsw.SearchSimilarAsync(new float[] { 1f, 0f }, 5, filterProd)).Should().ContainSingle(x => x.Chunk.ChunkId == "c_new");
+        bm25.Search("SIMD vector".AsSpan(), 5, filterProd).Should().ContainSingle(x => x.Chunk.ChunkId == "c_new");
     }
 }
