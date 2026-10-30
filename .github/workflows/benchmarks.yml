@@ -1,0 +1,33 @@
+name: Benchmarks
+
+on:
+  workflow_dispatch:
+    inputs:
+      filter:
+        description: 'BenchmarkDotNet filter expression (or --measure for quick hardware report)'
+        required: false
+        default: '--measure'
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    name: Run Performance Benchmarks (.NET 9)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build Benchmarks (Release)
+        run: dotnet build ZeroCopyRagEngine.Benchmarks/ZeroCopyRagEngine.Benchmarks.csproj -c Release
+
+      - name: Execute Benchmarks
+        run: dotnet run --project ZeroCopyRagEngine.Benchmarks/ZeroCopyRagEngine.Benchmarks.csproj -c Release --no-build -- ${{ inputs.filter }}
+

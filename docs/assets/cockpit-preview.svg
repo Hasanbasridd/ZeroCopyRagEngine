@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+  </defs>
+  <rect width="960" height="500" rx="16" fill="url(#bg)" stroke="#1f2937" stroke-width="2"/>
+  <rect x="24" y="24" width="912" height="56" rx="10" fill="#1e293b" fill-opacity="0.7" stroke="#334155"/>
+  <circle cx="52" cy="52" r="7" fill="#ef4444"/>
+  <circle cx="74" cy="52" r="7" fill="#f59e0b"/>
+  <circle cx="96" cy="52" r="7" fill="#10b981"/>
+  <text x="130" y="58" fill="#f8fafc" font-family="Segoe UI, Inter, sans-serif" font-size="16" font-weight="600">ZeroCopyRagEngine — Telemetry &amp; SSE Streaming Cockpit</text>
+  <rect x="740" y="38" width="176" height="28" rx="14" fill="#064e3b" stroke="#10b981"/>
+  <text x="762" y="57" fill="#34d399" font-family="Consolas, monospace" font-size="12">SIMD AVX2/512 • 0 B Loop</text>
+
+  <!-- Left Metrics Panel -->
+  <rect x="24" y="96" width="260" height="380" rx="12" fill="#1e293b" fill-opacity="0.5" stroke="#334155"/>
+  <text x="44" y="128" fill="#94a3b8" font-family="Segoe UI, sans-serif" font-size="12" font-weight="600">REAL-TIME ENGINE TELEMETRY</text>
+
+  <rect x="44" y="146" width="220" height="68" rx="8" fill="#0f172a" stroke="#1e293b"/>
+  <text x="58" y="168" fill="#64748b" font-family="Segoe UI, sans-serif" font-size="11">CHUNK &amp; SCORE HOT LOOP GC</text>
+  <text x="58" y="198" fill="#38bdf8" font-family="Consolas, monospace" font-size="22" font-weight="700">0 Bytes</text>
+
+  <rect x="44" y="228" width="220" height="68" rx="8" fill="#0f172a" stroke="#1e293b"/>
+  <text x="58" y="250" fill="#64748b" font-family="Segoe UI, sans-serif" font-size="11">RETRIEVAL MODE</text>
+  <text x="58" y="280" fill="#a855f7" font-family="Consolas, monospace" font-size="16" font-weight="700">Hybrid SIMD + BM25 RRF</text>
+
+  <rect x="44" y="310" width="220" height="68" rx="8" fill="#0f172a" stroke="#1e293b"/>
+  <text x="58" y="332" fill="#64748b" font-family="Segoe UI, sans-serif" font-size="11">GOLDEN EVAL (35 QUERIES)</text>
+  <text x="58" y="362" fill="#10b981" font-family="Consolas, monospace" font-size="16" font-weight="700">Recall@5: 1.000</text>
+
+  <rect x="44" y="392" width="220" height="68" rx="8" fill="#0f172a" stroke="#1e293b"/>
+  <text x="58" y="414" fill="#64748b" font-family="Segoe UI, sans-serif" font-size="11">STREAM PROTOCOL</text>
+  <text x="58" y="444" fill="#f8fafc" font-family="Consolas, monospace" font-size="15">text/event-stream (SSE)</text>
+
+  <!-- Right Chat Stream Panel -->
+  <rect x="300" y="96" width="636" height="380" rx="12" fill="#1e293b" fill-opacity="0.5" stroke="#334155"/>
+  
+  <rect x="324" y="120" width="440" height="48" rx="10" fill="#334155"/>
+  <text x="342" y="149" fill="#f1f5f9" font-family="Segoe UI, sans-serif" font-size="14">How does MemoryMappedVectorDatabase avoid heap copies?</text>
+
+  <rect x="324" y="186" width="588" height="200" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-opacity="0.5"/>
+  <text x="344" y="214" fill="#38bdf8" font-family="Consolas, monospace" font-size="12">[SSE STREAM • X-Correlation-ID: 8f94c2b1 • Context: &lt;untrusted_context&gt; sanitized]</text>
+  <text x="344" y="246" fill="#e2e8f0" font-family="Segoe UI, sans-serif" font-size="14">MemoryMappedVectorDatabase writes contiguous float32 embeddings after a</text>
+  <text x="344" y="270" fill="#e2e8f0" font-family="Segoe UI, sans-serif" font-size="14">16-byte ZCRV header and maps the file via MemoryMappedFile. During search,</text>
+  <text x="344" y="294" fill="#e2e8f0" font-family="Segoe UI, sans-serif" font-size="14">it acquires the OS page-cache pointer and wraps it directly as a</text>
+  <text x="344" y="318" fill="#38bdf8" font-family="Consolas, monospace" font-size="14">ReadOnlySpan&lt;float&gt; scored via TensorPrimitives.CosineSimilarity.</text>
+  <text x="344" y="356" fill="#64748b" font-family="Consolas, monospace" font-size="12">Source: memory-mapped-vectors.md (Page 1, Score: 0.984) ▋</text>
+
+  <rect x="324" y="408" width="480" height="44" rx="8" fill="#0f172a" stroke="#334155"/>
+  <text x="342" y="435" fill="#64748b" font-family="Segoe UI, sans-serif" font-size="13">Ask a technical question over your indexed corpus...</text>
+  <rect x="816" y="408" width="96" height="44" rx="8" fill="url(#accent)"/>
+  <text x="844" y="435" fill="#0f172a" font-family="Segoe UI, sans-serif" font-size="13" font-weight="700">Stream</text>
+</svg>
+

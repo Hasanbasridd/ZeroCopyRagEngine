@@ -4,19 +4,17 @@
 - Date: 2026-10-26
 
 ## Context
-Retrieval needs cosine similarity between a query vector and every stored vector. Storing vectors as separate arrays scatters them in memory.
+Retrieval needs cosine similarity between a query vector and stored vectors. Storing vectors as separate `float[]` arrays scatters them in memory and causes pointer-chasing cache misses.
 
 ## Decision
-`SimdLocalVectorDatabase` keeps all vectors in one contiguous `float[]` (row-major, fixed dimension) and scores them with `TensorPrimitives.CosineSimilarity`, which uses hardware intrinsics when available. Scores and indices use `ArrayPool<float>` / `ArrayPool<int>` buffers.
+`SimdLocalVectorDatabase` keeps all vectors in one contiguous `float[]` (row-major, fixed dimension), scores them with `TensorPrimitives.CosineSimilarity` (which uses AVX2 / AVX-512 / ARM NEON hardware intrinsics when supported), and maintains top-K results in-place via `TopKSelector` on `Span<float>` and `Span<int>`.
 
 ## Rationale
-- One contiguous array gives sequential memory access, which suits hardware prefetching and SIMD loads better than many separately allocated arrays.
-- `TensorPrimitives` provides vectorized cosine similarity in the BCL, avoiding a native dependency or hand-written intrinsics.
-- An exact flat scan is the simplest correct baseline; an approximate index (e.g. HNSW) can be introduced later behind the same `IVectorDatabase` port if N grows.
+- One contiguous array gives sequential memory access, maximizing hardware prefetch efficiency and SIMD throughput.
+- `TensorPrimitives.CosineSimilarity` provides hardware-accelerated vector math in the .NET BCL without external native libraries.
+- In-place `TopKSelector` avoids sorting all $N$ scores ($O(N \log N)$) and eliminates `Comparer<float>` delegate allocations.
 
 ## Consequences
-- Exact (not approximate) results; contiguous, cache-friendly scan; the scoring loop does not allocate.
-- Search is O(N) and single-threaded; all N scores are fully sorted rather than selecting top-k.
-- Result materialization allocates a `List<ScoredChunk>` and top-k `ScoredChunk` objects.
-- Each upsert re-allocates and copies the whole store.
-- In-memory only: no persistence.
+- Exact (1.000 recall) results; contiguous, cache-friendly scan; `SearchSimilarSpan` allocates 0 bytes end-to-end.
+- Flat scan is $O(N)$ and memory-bandwidth bound (~153.6 MB per 100k × 384 scan); see ADR-0005 for `MemoryMappedFile`, `Int8` quantization, and `HNSW` graph indexing.
+- `SearchSimilarAsync` allocates the returned `Task`, `List<ScoredChunk>`, and `topK` `ScoredChunk` records.
