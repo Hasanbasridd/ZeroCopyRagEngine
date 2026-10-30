@@ -1,12 +1,13 @@
 name: Cyber-Guard
 
 # Server-side enforcement of the zero-allocation rules (Madde 4.3).
-# Runs the Roslyn heap-allocation analyzer, so `git commit --no-verify`
-# cannot bypass it.
+# Runs both the Roslyn heap-allocation analyzer and the banned-method scan
+# (which covers yield-return iterator bodies skipped by ClrHeapAllocationAnalyzer),
+# so `git commit --no-verify` cannot bypass it.
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, 'test/**', 'feature/**', 'pr/**' ]
   pull_request:
 
 jobs:
@@ -25,11 +26,14 @@ jobs:
       - name: Build (HAA* diagnostics in Chunkers/ and VectorStores/ are errors)
         run: dotnet build ZeroCopyRagEngine.sln --no-restore -c Release
 
-      - name: Banned-method scan (same rule as .githooks/pre-commit)
+      - name: Banned-method scan (same rule as .githooks/pre-commit, with allow-span-split exception)
         run: |
-          if grep -rnE '\.Select\(|\.ToList\(|\.Split\(' \
-               ZeroCopyRagEngine.Infrastructure/Chunkers \
-               ZeroCopyRagEngine.Infrastructure/VectorStores; then
-            echo "🚨 CYBER-GUARD ALERT: Banned method detected in hot path."
+          VIOLATIONS=$(grep -rnE '\.Select\(|\.ToList\(|\.Split\(' \
+            ZeroCopyRagEngine.Infrastructure/Chunkers \
+            ZeroCopyRagEngine.Infrastructure/VectorStores \
+            | grep -vE '\.Split\(.*// cyber-guard: allow-span-split \(.+\)' || true)
+          if [ -n "$VIOLATIONS" ]; then
+            echo "🚨 CYBER-GUARD ALERT: Banned method detected in hot path:"
+            echo "$VIOLATIONS"
             exit 1
           fi
