@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.Arm;
@@ -7,6 +9,9 @@ using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Running;
 using ZeroCopyRagEngine.Domain.Entities;
+using ZeroCopyRagEngine.Infrastructure.Chunkers;
+using ZeroCopyRagEngine.Infrastructure.Embedding;
+using ZeroCopyRagEngine.Infrastructure.Evaluation;
 using ZeroCopyRagEngine.Infrastructure.VectorStores;
 
 namespace ZeroCopyRagEngine.Benchmarks;
@@ -15,6 +20,12 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        if (args.Length > 0 && string.Equals(args[0], "--eval", StringComparison.OrdinalIgnoreCase))
+        {
+            string datasetPath = args.Length > 1 ? args[1] : FindDatasetPath();
+            return await RunEvaluationSuiteAsync(datasetPath);
+        }
+
         if (args.Length > 0 && string.Equals(args[0], "--measure", StringComparison.OrdinalIgnoreCase))
         {
             await RunHardwareVerifiedBenchmarksAsync();
@@ -22,6 +33,55 @@ public class Program
         }
 
         BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+        return 0;
+    }
+
+    private static string FindDatasetPath()
+    {
+        string[] candidates =
+        {
+            Path.Combine(Directory.GetCurrentDirectory(), "datasets", "golden-dataset.json"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "datasets", "golden-dataset.json")
+        };
+
+        for (int i = 0; i < candidates.Length; i++)
+        {
+            if (File.Exists(candidates[i]))
+                return Path.GetFullPath(candidates[i]);
+        }
+
+        throw new FileNotFoundException("Could not locate datasets/golden-dataset.json.");
+    }
+
+    private static async Task<int> RunEvaluationSuiteAsync(string datasetPath)
+    {
+        Console.WriteLine($"# ZeroCopyRagEngine — Golden Dataset Evaluation Report");
+        Console.WriteLine($"Dataset: {datasetPath}");
+        var dataset = RagEvaluator.LoadGoldenDataset(datasetPath);
+        var embedding = new DummyEmbeddingService();
+
+        var report = await RagEvaluator.EvaluateConfigurationAsync(
+            "SpanOverlapChunker + Flat Float32 SIMD",
+            dataset,
+            new ZeroCopySemanticOverlapChunker(),
+            new SimdLocalVectorDatabase(),
+            embedding,
+            k: 5);
+
+        Console.WriteLine();
+        Console.WriteLine("| Configuration | Queries | Recall@5 | MRR@5 | nDCG@5 | Faithfulness | Answer Relevance | Avg Latency (ms) |");
+        Console.WriteLine("| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |");
+        Console.WriteLine(
+            $"| `{report.ConfigurationName}` | {report.QuestionCount} | {report.RecallAtK:F3} | {report.MrrAtK:F3} | {report.NdcgAtK:F3} | {report.Faithfulness:F3} | {report.AnswerRelevance:F3} | {report.AverageLatencyMs:F2} ms |");
+
+        if (report.RecallAtK < 0.85 || report.MrrAtK < 0.75 || report.NdcgAtK < 0.80)
+        {
+            Console.Error.WriteLine(
+                $"🚨 EVALUATION REGRESSION DETECTED: Recall@5={report.RecallAtK:F3}, MRR@5={report.MrrAtK:F3}, nDCG@5={report.NdcgAtK:F3}");
+            return 1;
+        }
+
+        Console.WriteLine("\n✅ All RAG Evaluation quality thresholds passed.");
         return 0;
     }
 
