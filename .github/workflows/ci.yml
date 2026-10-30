@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 'feature/**', 'pr/**' ]
   pull_request:
     branches: [ main ]
 
@@ -18,8 +18,8 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
-  build-test:
-    name: Build & Test (.NET 9)
+  build-test-eval:
+    name: Build, Test, Coverage & RAG Eval (.NET 9)
     runs-on: ubuntu-latest
 
     steps:
@@ -34,8 +34,18 @@ jobs:
       - name: Restore
         run: dotnet restore ZeroCopyRagEngine.sln
 
-      - name: Build
+      - name: Build (Analyzer Errors Enforced)
         run: dotnet build ZeroCopyRagEngine.sln -c Release --no-restore
 
-      - name: Test
-        run: dotnet test ZeroCopyRagEngine.sln -c Release --no-build
+      - name: Test with Coverlet Coverage (Excluding Live Integration Tests)
+        run: dotnet test ZeroCopyRagEngine.sln -c Release --no-build --filter "Category!=Integration" --collect:"XPlat Code Coverage" --results-directory ./TestResults
+
+      - name: Run Golden Dataset RAG Evaluation Gate
+        if: hashFiles('datasets/golden-dataset.json') != ''
+        run: dotnet run --project ZeroCopyRagEngine.Benchmarks -c Release --no-build -- --eval datasets/golden-dataset.json
+
+      - name: Upload Coverage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: ./TestResults/**/coverage.cobertura.xml

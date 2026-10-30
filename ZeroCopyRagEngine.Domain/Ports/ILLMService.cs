@@ -6,7 +6,7 @@ namespace ZeroCopyRagEngine.Domain.Ports;
 public interface ILLMService
 {
     /// <summary>
-    /// Streams tokens asynchronously to prevent LOH (Large Object Heap) fragmentation.
+    /// Streams generated tokens asynchronously to minimize time-to-first-token (TTFT) and avoid buffering the full response.
     /// </summary>
     IAsyncEnumerable<string> GenerateStreamAsync(string systemPrompt, string userPrompt, CancellationToken cancellationToken = default);
 }
