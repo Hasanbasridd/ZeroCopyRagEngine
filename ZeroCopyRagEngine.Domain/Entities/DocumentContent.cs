@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ModernAiAssistant.Domain.Entities;
+namespace ZeroCopyRagEngine.Domain.Entities;
 
 public sealed record PageContent(int PageNumber, ReadOnlyMemory<char> RawText);
 

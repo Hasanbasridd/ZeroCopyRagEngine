@@ -9,6 +9,11 @@ Retrieval needs cosine similarity between a query vector and every stored vector
 ## Decision
 `SimdLocalVectorDatabase` keeps all vectors in one contiguous `float[]` (row-major, fixed dimension) and scores them with `TensorPrimitives.CosineSimilarity`, which uses hardware intrinsics when available. Scores and indices use `ArrayPool<float>` / `ArrayPool<int>` buffers.
 
+## Rationale
+- One contiguous array gives sequential memory access, which suits hardware prefetching and SIMD loads better than many separately allocated arrays.
+- `TensorPrimitives` provides vectorized cosine similarity in the BCL, avoiding a native dependency or hand-written intrinsics.
+- An exact flat scan is the simplest correct baseline; an approximate index (e.g. HNSW) can be introduced later behind the same `IVectorDatabase` port if N grows.
+
 ## Consequences
 - Exact (not approximate) results; contiguous, cache-friendly scan; the scoring loop does not allocate.
 - Search is O(N) and single-threaded; all N scores are fully sorted rather than selecting top-k.

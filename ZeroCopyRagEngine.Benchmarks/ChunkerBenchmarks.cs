@@ -1,9 +1,9 @@
 using System;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
-using ModernAiAssistant.Infrastructure.Chunkers;
+using ZeroCopyRagEngine.Infrastructure.Chunkers;
 
-namespace ModernAiAssistant.Benchmarks;
+namespace ZeroCopyRagEngine.Benchmarks;
 
 [MemoryDiagnoser]
 public class ChunkerBenchmarks

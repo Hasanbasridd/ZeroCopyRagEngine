@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using ModernAiAssistant.Domain.Ports;
+using ZeroCopyRagEngine.Domain.Ports;
 
-namespace ModernAiAssistant.Infrastructure.LLM;
+namespace ZeroCopyRagEngine.Infrastructure.LLM;
 
 public sealed class DummyLLMService : ILLMService
 {

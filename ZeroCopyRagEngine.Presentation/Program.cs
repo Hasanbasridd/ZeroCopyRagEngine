@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using ModernAiAssistant.Application.Services;
-using ModernAiAssistant.Domain.Ports;
-using ModernAiAssistant.Infrastructure.Chunkers;
-using ModernAiAssistant.Infrastructure.Embedding;
-using ModernAiAssistant.Infrastructure.LLM;
-using ModernAiAssistant.Infrastructure.VectorStores;
+using ZeroCopyRagEngine.Application.Services;
+using ZeroCopyRagEngine.Domain.Ports;
+using ZeroCopyRagEngine.Infrastructure.Chunkers;
+using ZeroCopyRagEngine.Infrastructure.Embedding;
+using ZeroCopyRagEngine.Infrastructure.LLM;
+using ZeroCopyRagEngine.Infrastructure.VectorStores;
 
 var builder = WebApplication.CreateBuilder(args);
 

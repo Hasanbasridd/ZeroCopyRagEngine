@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ModernAiAssistant.Domain.Ports;
+namespace ZeroCopyRagEngine.Domain.Ports;
 
 public interface ITextChunker
 {

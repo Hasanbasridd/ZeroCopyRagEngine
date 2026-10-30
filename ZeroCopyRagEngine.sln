@@ -1,19 +1,19 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernAiAssistant.Domain", "ModernAiAssistant.Domain\ModernAiAssistant.Domain.csproj", "{2AABC409-A3A7-4CAF-84A8-DC5936A69DDC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZeroCopyRagEngine.Domain", "ZeroCopyRagEngine.Domain\ZeroCopyRagEngine.Domain.csproj", "{2AABC409-A3A7-4CAF-84A8-DC5936A69DDC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernAiAssistant.Application", "ModernAiAssistant.Application\ModernAiAssistant.Application.csproj", "{4B98C560-DA8F-4650-A0C1-05AA7BC80D09}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZeroCopyRagEngine.Application", "ZeroCopyRagEngine.Application\ZeroCopyRagEngine.Application.csproj", "{4B98C560-DA8F-4650-A0C1-05AA7BC80D09}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernAiAssistant.Infrastructure", "ModernAiAssistant.Infrastructure\ModernAiAssistant.Infrastructure.csproj", "{F059D557-0A25-4F2E-BBB6-DF7E30F5B42E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZeroCopyRagEngine.Infrastructure", "ZeroCopyRagEngine.Infrastructure\ZeroCopyRagEngine.Infrastructure.csproj", "{F059D557-0A25-4F2E-BBB6-DF7E30F5B42E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernAiAssistant.Presentation", "ModernAiAssistant.Presentation\ModernAiAssistant.Presentation.csproj", "{851E69F2-C05A-46C5-A74A-48EE55C35767}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZeroCopyRagEngine.Presentation", "ZeroCopyRagEngine.Presentation\ZeroCopyRagEngine.Presentation.csproj", "{851E69F2-C05A-46C5-A74A-48EE55C35767}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernAiAssistant.Tests", "ModernAiAssistant.Tests\ModernAiAssistant.Tests.csproj", "{35CCB4E6-54FA-435A-816B-B743F8AA22B2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZeroCopyRagEngine.Tests", "ZeroCopyRagEngine.Tests\ZeroCopyRagEngine.Tests.csproj", "{35CCB4E6-54FA-435A-816B-B743F8AA22B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernAiAssistant.Benchmarks", "ModernAiAssistant.Benchmarks\ModernAiAssistant.Benchmarks.csproj", "{D153BE37-4439-4801-8C47-A10064995696}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZeroCopyRagEngine.Benchmarks", "ZeroCopyRagEngine.Benchmarks\ZeroCopyRagEngine.Benchmarks.csproj", "{D153BE37-4439-4801-8C47-A10064995696}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

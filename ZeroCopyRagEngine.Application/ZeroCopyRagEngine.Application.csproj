@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\ModernAiAssistant.Domain\ModernAiAssistant.Domain.csproj" />
+    <ProjectReference Include="..\ZeroCopyRagEngine.Domain\ZeroCopyRagEngine.Domain.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

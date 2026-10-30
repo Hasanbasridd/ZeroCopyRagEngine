@@ -11,9 +11,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ModernAiAssistant.Application\ModernAiAssistant.Application.csproj" />
-    <ProjectReference Include="..\ModernAiAssistant.Infrastructure\ModernAiAssistant.Infrastructure.csproj" />
-    <ProjectReference Include="..\ModernAiAssistant.Domain\ModernAiAssistant.Domain.csproj" />
+    <ProjectReference Include="..\ZeroCopyRagEngine.Application\ZeroCopyRagEngine.Application.csproj" />
+    <ProjectReference Include="..\ZeroCopyRagEngine.Infrastructure\ZeroCopyRagEngine.Infrastructure.csproj" />
+    <ProjectReference Include="..\ZeroCopyRagEngine.Domain\ZeroCopyRagEngine.Domain.csproj" />
   </ItemGroup>
 
 </Project>

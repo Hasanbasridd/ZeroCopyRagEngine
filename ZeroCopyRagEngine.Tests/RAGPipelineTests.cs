@@ -2,12 +2,12 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using ModernAiAssistant.Domain.Entities;
-using ModernAiAssistant.Infrastructure.Chunkers;
-using ModernAiAssistant.Infrastructure.VectorStores;
+using ZeroCopyRagEngine.Domain.Entities;
+using ZeroCopyRagEngine.Infrastructure.Chunkers;
+using ZeroCopyRagEngine.Infrastructure.VectorStores;
 using Xunit;
 
-namespace ModernAiAssistant.Tests;
+namespace ZeroCopyRagEngine.Tests;
 
 public class RAGPipelineTests
 {

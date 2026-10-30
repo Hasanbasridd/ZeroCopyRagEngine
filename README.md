@@ -14,8 +14,8 @@ A Retrieval-Augmented Generation (RAG) pipeline built with **Clean Architecture*
 
 This project is not just another RAG wrapper; it is an exploration of high-performance systems engineering using modern .NET primitives.
 
-* **Low-Allocation Chunking:** [`ZeroCopySemanticOverlapChunker`](ModernAiAssistant.Infrastructure/Chunkers/ZeroCopySemanticOverlapChunker.cs) avoids `string.Split()`, string concatenation and LINQ. Chunk boundaries are computed on `ReadOnlySpan<char>` with a pooled `ArrayPool<Range>` buffer, and chunks are returned as `ReadOnlyMemory<char>` slices of the original in-memory string (no substring copies). The `yield`-based iterator allocates one state-machine object per call.
-* **SIMD-Accelerated Vector Search:** [`SimdLocalVectorDatabase`](ModernAiAssistant.Infrastructure/VectorStores/SimdLocalVectorDatabase.cs) stores vectors in a single flattened in-memory `float[]` and scores them with `TensorPrimitives.CosineSimilarity`, which uses hardware intrinsics (AVX2 / AVX-512 / ARM NEON) when the CPU supports them. Search is an exact, single-threaded O(N) flat scan.
+* **Low-Allocation Chunking:** [`ZeroCopySemanticOverlapChunker`](ZeroCopyRagEngine.Infrastructure/Chunkers/ZeroCopySemanticOverlapChunker.cs) avoids `string.Split()`, string concatenation and LINQ. Chunk boundaries are computed on `ReadOnlySpan<char>` with a pooled `ArrayPool<Range>` buffer, and chunks are returned as `ReadOnlyMemory<char>` slices of the original in-memory string (no substring copies). The `yield`-based iterator allocates one state-machine object per call.
+* **SIMD-Accelerated Vector Search:** [`SimdLocalVectorDatabase`](ZeroCopyRagEngine.Infrastructure/VectorStores/SimdLocalVectorDatabase.cs) stores vectors in a single flattened in-memory `float[]` and scores them with `TensorPrimitives.CosineSimilarity`, which uses hardware intrinsics (AVX2 / AVX-512 / ARM NEON) when the CPU supports them. Search is an exact, single-threaded O(N) flat scan.
 * **SSE Streaming:** An `IAsyncEnumerable<string>` pipeline streams LLM tokens to the HTTP response (`text/event-stream`) as they are produced, so the full answer is never buffered server-side. Each token is still encoded into a small per-token string/byte array.
 * **The Cyber-Guard (Siber-Bekçi):** Allocation discipline for the hot paths (`Chunkers/` and `VectorStores/`) is enforced in three layers:
   1. **Roslyn analyzer** ([ClrHeapAllocationAnalyzer](https://github.com/microsoft/RoslynClrHeapAllocationAnalyzer)) — heap-allocation diagnostics are **build errors** in those folders ([`.editorconfig`](.editorconfig)). Intentional allocations require a `[SuppressMessage]` with a written justification.
@@ -30,16 +30,16 @@ The engine is split into four layer projects plus tests and benchmarks:
 
 ```text
 ZeroCopyRagEngine/
-├── ModernAiAssistant.RagEngine.sln
-├── ModernAiAssistant.Domain/          # Entities (TextChunk, ScoredChunk, ...) and Ports (IVectorDatabase, ITextChunker, ILLMService, IEmbeddingService, IDocumentReader)
-├── ModernAiAssistant.Application/     # Use cases (ChatRetrievalService) and DTOs
-├── ModernAiAssistant.Infrastructure/  # Chunkers/, VectorStores/, Embedding/, LLM/ adapters
-├── ModernAiAssistant.Presentation/    # ASP.NET Core Web API (ChatController) + static UI in wwwroot/
-├── ModernAiAssistant.Tests/           # Pipeline and presentation tests
-├── ModernAiAssistant.Benchmarks/      # BenchmarkDotNet suites
+├── ZeroCopyRagEngine.sln
+├── ZeroCopyRagEngine.Domain/          # Entities (TextChunk, ScoredChunk, ...) and Ports (IVectorDatabase, ITextChunker, ILLMService, IEmbeddingService, IDocumentReader)
+├── ZeroCopyRagEngine.Application/     # Use cases (ChatRetrievalService) and DTOs
+├── ZeroCopyRagEngine.Infrastructure/  # Chunkers/, VectorStores/, Embedding/, LLM/ adapters
+├── ZeroCopyRagEngine.Presentation/    # ASP.NET Core Web API (ChatController) + static UI in wwwroot/
+├── ZeroCopyRagEngine.Tests/           # Pipeline and presentation tests
+├── ZeroCopyRagEngine.Benchmarks/      # BenchmarkDotNet suites
 ├── docs/adr/                          # Architecture Decision Records
 ├── .githooks/                         # Versioned Cyber-Guard hook
-├── .github/workflows/                 # CI (Cyber-Guard)
+├── .github/workflows/                 # CI (build & test) and Cyber-Guard
 └── setup-hooks.sh                     # Activates .githooks via core.hooksPath
 ```
 
@@ -53,15 +53,15 @@ ZeroCopyRagEngine/
 ### 1. Text Chunking vs String Split
 | Method | Mean | Allocated |
 | :--- | :--- | :--- |
-| `TraditionalStringSplit` (baseline) | 326.14 ms | 2.54 MB |
-| **`ZeroCopySpanChunking`** (`ZeroCopySemanticOverlapChunker`) | **5.27 ms** | **0 B reported** |
+| `TraditionalStringSplit` (baseline) | 326.14 ms | 2.54 MB (Faz 2'de doğrulanacak) |
+| **`ZeroCopySpanChunking`** (`ZeroCopySemanticOverlapChunker`) | **5.27 ms** | **0 B reported** (Faz 2'de doğrulanacak) |
 
 Caveat: the baseline splits the text into words with `string.Split`, which is a weak comparison and not an equivalent chunking algorithm. The `0 B` figure must be re-verified, since the iterator allocates one state-machine object per call.
 
 ### 2. SIMD Vector Search (100,000 vectors, dimension 384, top-k 5)
 | Search Target | Latency | Hardware Acceleration | Allocated |
 | :--- | :--- | :--- | :--- |
-| Cosine Similarity Search | < 1.2 ms (unverified) | AVX-512 Enabled | Not 0 B (see budget) |
+| Cosine Similarity Search | < 1.2 ms (unverified, Faz 2'de doğrulanacak) | AVX-512 Enabled (Faz 2'de doğrulanacak) | Not 0 B (see budget) |
 
 Caveat: 100,000 × 384 × 4 bytes ≈ 154 MB per scan. Scanning that in 1.2 ms on one thread would need ≈ 128 GB/s of memory bandwidth, which is not physically plausible, so this latency figure is treated as unverified until re-measured.
 
@@ -92,10 +92,10 @@ The scope of the "zero-allocation" claim is therefore the **chunk boundary loop*
 
 | Claim | Evidence |
 | :--- | :--- |
-| 61x faster chunking (unverified) | Benchmark ([`ChunkerBenchmarks.cs`](ModernAiAssistant.Benchmarks/ChunkerBenchmarks.cs)), compared against a `string.Split` baseline only |
-| 0 B in the chunking loop | Code review + Roslyn analyzer; the benchmark-level `0 B` still needs re-verification |
+| 61x faster chunking (unverified) | Benchmark ([`ChunkerBenchmarks.cs`](ZeroCopyRagEngine.Benchmarks/ChunkerBenchmarks.cs)), compared against a `string.Split` baseline only — Faz 2'de doğrulanacak |
+| 0 B in the chunking loop | Code review + Roslyn analyzer; the benchmark-level `0 B` still needs re-verification — Faz 2'de doğrulanacak |
 | 0 B in the similarity scoring loop | Code review + Roslyn analyzer; the full search call allocates (see budget) |
-| < 1.2 ms search over 100k vectors | Benchmark ([`VectorSearchBenchmarks.cs`](ModernAiAssistant.Benchmarks/VectorSearchBenchmarks.cs)), environment not recorded, physically implausible (see caveat) |
+| < 1.2 ms search over 100k vectors | Benchmark ([`VectorSearchBenchmarks.cs`](ZeroCopyRagEngine.Benchmarks/VectorSearchBenchmarks.cs)), environment not recorded, physically implausible (see caveat) — Faz 2'de doğrulanacak |
 | SIMD acceleration | `TensorPrimitives.CosineSimilarity` in source; actual ISA depends on the host CPU |
 | Provider agnostic | Ports in the Domain layer; only dummy LLM/embedding adapters are implemented today |
 
@@ -122,7 +122,7 @@ chmod +x ./setup-hooks.sh
 
 3. Run the Presentation Web API:
 ```bash
-dotnet run --project ModernAiAssistant.Presentation
+dotnet run --project ZeroCopyRagEngine.Presentation
 ```
 
 Open your browser and navigate to `http://localhost:<port>` to access the Luxury Glassmorphism Cockpit UI.

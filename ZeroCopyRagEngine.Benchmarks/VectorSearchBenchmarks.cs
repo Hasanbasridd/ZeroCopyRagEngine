@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
-using ModernAiAssistant.Domain.Entities;
-using ModernAiAssistant.Infrastructure.VectorStores;
+using ZeroCopyRagEngine.Domain.Entities;
+using ZeroCopyRagEngine.Infrastructure.VectorStores;
 
-namespace ModernAiAssistant.Benchmarks;
+namespace ZeroCopyRagEngine.Benchmarks;
 
 [MemoryDiagnoser]
 public class VectorSearchBenchmarks

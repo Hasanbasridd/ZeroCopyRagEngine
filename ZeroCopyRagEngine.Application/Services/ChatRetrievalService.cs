@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
-using ModernAiAssistant.Domain.Ports;
+using ZeroCopyRagEngine.Domain.Ports;
 
-namespace ModernAiAssistant.Application.Services;
+namespace ZeroCopyRagEngine.Application.Services;
 
 public sealed class ChatRetrievalService
 {

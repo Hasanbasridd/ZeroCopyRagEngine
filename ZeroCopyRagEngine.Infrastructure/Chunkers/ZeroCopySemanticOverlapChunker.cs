@@ -1,9 +1,9 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using ModernAiAssistant.Domain.Ports;
+using ZeroCopyRagEngine.Domain.Ports;
 
-namespace ModernAiAssistant.Infrastructure.Chunkers;
+namespace ZeroCopyRagEngine.Infrastructure.Chunkers;
 
 public sealed class ZeroCopySemanticOverlapChunker : ITextChunker
 {

@@ -6,10 +6,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics.Tensors;
 using System.Threading;
 using System.Threading.Tasks;
-using ModernAiAssistant.Domain.Entities;
-using ModernAiAssistant.Domain.Ports;
+using ZeroCopyRagEngine.Domain.Entities;
+using ZeroCopyRagEngine.Domain.Ports;
 
-namespace ModernAiAssistant.Infrastructure.VectorStores;
+namespace ZeroCopyRagEngine.Infrastructure.VectorStores;
 
 public sealed class SimdLocalVectorDatabase : IVectorDatabase
 {

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -22,10 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ModernAiAssistant.Domain\ModernAiAssistant.Domain.csproj" />
-    <ProjectReference Include="..\ModernAiAssistant.Application\ModernAiAssistant.Application.csproj" />
-    <ProjectReference Include="..\ModernAiAssistant.Infrastructure\ModernAiAssistant.Infrastructure.csproj" />
-    <ProjectReference Include="..\ModernAiAssistant.Presentation\ModernAiAssistant.Presentation.csproj" />
+    <ProjectReference Include="..\ZeroCopyRagEngine.Domain\ZeroCopyRagEngine.Domain.csproj" />
+    <ProjectReference Include="..\ZeroCopyRagEngine.Application\ZeroCopyRagEngine.Application.csproj" />
+    <ProjectReference Include="..\ZeroCopyRagEngine.Infrastructure\ZeroCopyRagEngine.Infrastructure.csproj" />
+    <ProjectReference Include="..\ZeroCopyRagEngine.Presentation\ZeroCopyRagEngine.Presentation.csproj" />
   </ItemGroup>
 
 </Project>

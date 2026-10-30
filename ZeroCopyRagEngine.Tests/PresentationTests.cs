@@ -4,10 +4,10 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
-using ModernAiAssistant.Application.DTOs;
+using ZeroCopyRagEngine.Application.DTOs;
 using Xunit;
 
-namespace ModernAiAssistant.Tests;
+namespace ZeroCopyRagEngine.Tests;
 
 public class PresentationTests : IClassFixture<WebApplicationFactory<Program>>
 {

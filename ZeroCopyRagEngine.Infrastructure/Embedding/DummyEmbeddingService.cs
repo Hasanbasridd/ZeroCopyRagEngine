@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using ModernAiAssistant.Domain.Ports;
+using ZeroCopyRagEngine.Domain.Ports;
 
-namespace ModernAiAssistant.Infrastructure.Embedding;
+namespace ZeroCopyRagEngine.Infrastructure.Embedding;
 
 public sealed class DummyEmbeddingService : IEmbeddingService
 {

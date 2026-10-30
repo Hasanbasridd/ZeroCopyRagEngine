@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 
-namespace ModernAiAssistant.Domain.Ports;
+namespace ZeroCopyRagEngine.Domain.Ports;
 
 public interface ILLMService
 {

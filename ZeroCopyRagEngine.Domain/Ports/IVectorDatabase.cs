@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using ModernAiAssistant.Domain.Entities;
+using ZeroCopyRagEngine.Domain.Entities;
 
-namespace ModernAiAssistant.Domain.Ports;
+namespace ZeroCopyRagEngine.Domain.Ports;
 
 public interface IVectorDatabase
 {

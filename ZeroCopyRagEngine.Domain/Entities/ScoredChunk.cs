@@ -1,3 +1,3 @@
-namespace ModernAiAssistant.Domain.Entities;
+namespace ZeroCopyRagEngine.Domain.Entities;
 
 public sealed record ScoredChunk(TextChunk Chunk, float SimilarityScore);

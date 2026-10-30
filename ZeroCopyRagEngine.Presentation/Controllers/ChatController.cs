@@ -2,10 +2,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using ModernAiAssistant.Application.DTOs;
-using ModernAiAssistant.Application.Services;
+using ZeroCopyRagEngine.Application.DTOs;
+using ZeroCopyRagEngine.Application.Services;
 
-namespace ModernAiAssistant.Presentation.Controllers;
+namespace ZeroCopyRagEngine.Presentation.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

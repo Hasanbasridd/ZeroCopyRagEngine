@@ -1,6 +1,6 @@
 using BenchmarkDotNet.Running;
 
-namespace ModernAiAssistant.Benchmarks;
+namespace ZeroCopyRagEngine.Benchmarks;
 
 public class Program
 {
