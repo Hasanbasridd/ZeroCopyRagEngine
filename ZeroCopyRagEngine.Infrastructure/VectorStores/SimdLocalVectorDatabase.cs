@@ -14,15 +14,19 @@ namespace ZeroCopyRagEngine.Infrastructure.VectorStores;
 public sealed class SimdLocalVectorDatabase : IVectorDatabase
 {
     private readonly ConcurrentDictionary<string, TextChunk> _storage = new();
-    
-    // Flattened array for ultra-fast L1/L2 Cache friendly SIMD processing
+
+    // Flattened array for L1/L2 Cache friendly SIMD processing
     private float[] _vectorStore = Array.Empty<float>();
     private string[] _vectorIds = Array.Empty<string>();
     private int _vectorDimension;
     private int _vectorCount;
     private readonly object _syncLock = new();
 
+    public int Count => _vectorCount;
+    public int Dimension => _vectorDimension;
+
     [SuppressMessage("Performance", "HAA0501", Justification = "Ingestion path, not the search hot path: the flattened store is grown once per upsert batch.")]
+    [SuppressMessage("Performance", "HAA0502", Justification = "Lock contention and dictionary storage occur only during batch ingestion.")]
     public Task UpsertChunksAsync(IReadOnlyList<TextChunk> chunks, CancellationToken cancellationToken = default)
     {
         if (chunks.Count == 0) return Task.CompletedTask;
@@ -46,7 +50,7 @@ public sealed class SimdLocalVectorDatabase : IVectorDatabase
             {
                 var chunk = chunks[i];
                 _storage[chunk.ChunkId] = chunk;
-                
+
                 int destIndex = _vectorCount + i;
                 newVectorIds[destIndex] = chunk.ChunkId;
                 Array.Copy(chunk.Embedding, 0, newVectorStore, destIndex * _vectorDimension, _vectorDimension);
@@ -60,44 +64,84 @@ public sealed class SimdLocalVectorDatabase : IVectorDatabase
         return Task.CompletedTask;
     }
 
-    [SuppressMessage("Performance", "HAA0502", Justification = "Result materialization: one List<ScoredChunk> and topK ScoredChunk instances per query, required by the IVectorDatabase contract. The O(N) scoring loop itself does not allocate.")]
-    public Task<IReadOnlyList<ScoredChunk>> SearchSimilarAsync(ReadOnlyMemory<float> queryVector, int topK, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Strictly 0-byte GC allocation SIMD vector search writing top-K indices and scores directly into caller spans.
+    /// </summary>
+    public int SearchSimilarSpan(ReadOnlySpan<float> queryVector, Span<int> topIndices, Span<float> topScores)
     {
-        if (_vectorCount == 0)
+        int count = _vectorCount;
+        int dim = _vectorDimension;
+        int maxK = Math.Min(topIndices.Length, topScores.Length);
+        if (count == 0 || dim == 0 || maxK <= 0)
+            return 0;
+
+        float[] vectorStoreRef = _vectorStore;
+        int selectedCount = 0;
+
+        for (int i = 0; i < count; i++)
+        {
+            ReadOnlySpan<float> targetVector = new ReadOnlySpan<float>(vectorStoreRef, i * dim, dim);
+            float score = TensorPrimitives.CosineSimilarity(queryVector, targetVector);
+            TopKSelector.InsertCandidate(score, i, topScores, topIndices, ref selectedCount, maxK);
+        }
+
+        return selectedCount;
+    }
+
+    public Task<IReadOnlyList<ScoredChunk>> SearchSimilarAsync(
+        ReadOnlyMemory<float> queryVector,
+        int topK,
+        CancellationToken cancellationToken = default)
+        => SearchSimilarAsync(queryVector, topK, filter: null, cancellationToken);
+
+    [SuppressMessage("Performance", "HAA0502", Justification = "Result materialization: one List<ScoredChunk> and topK ScoredChunk instances per query, required by the IVectorDatabase contract. The O(N) scoring and Top-K selection loop itself does not allocate.")]
+    public Task<IReadOnlyList<ScoredChunk>> SearchSimilarAsync(
+        ReadOnlyMemory<float> queryVector,
+        int topK,
+        MetadataFilter? filter,
+        CancellationToken cancellationToken = default)
+    {
+        if (_vectorCount == 0 || topK <= 0)
             return Task.FromResult<IReadOnlyList<ScoredChunk>>(Array.Empty<ScoredChunk>());
 
         ReadOnlySpan<float> querySpan = queryVector.Span;
-        float[] vectorStoreRef = _vectorStore; // Local ref to avoid lock contention
+        float[] vectorStoreRef = _vectorStore;
         string[] vectorIdsRef = _vectorIds;
         int count = _vectorCount;
         int dim = _vectorDimension;
+        int effectiveK = Math.Min(topK, count);
 
-        // 0-Byte GC Allocation during search via ArrayPool
-        float[] scores = ArrayPool<float>.Shared.Rent(count);
-        int[] indices = ArrayPool<int>.Shared.Rent(count);
+        float[] topScores = ArrayPool<float>.Shared.Rent(effectiveK);
+        int[] topIndices = ArrayPool<int>.Shared.Rent(effectiveK);
 
         try
         {
-            // Hardware-accelerated batch Cosine Similarity (AVX-512 / NEON if hardware supports)
+            Span<float> scoresSpan = topScores.AsSpan(0, effectiveK);
+            Span<int> indicesSpan = topIndices.AsSpan(0, effectiveK);
+            int selectedCount = 0;
+
             for (int i = 0; i < count; i++)
             {
+                if (filter is not null)
+                {
+                    string candidateId = vectorIdsRef[i];
+                    if (!_storage.TryGetValue(candidateId, out var candidateChunk) || !filter.Matches(candidateChunk.Metadata))
+                        continue;
+                }
+
                 ReadOnlySpan<float> targetVector = new ReadOnlySpan<float>(vectorStoreRef, i * dim, dim);
-                scores[i] = TensorPrimitives.CosineSimilarity(querySpan, targetVector);
-                indices[i] = i;
+                float score = TensorPrimitives.CosineSimilarity(querySpan, targetVector);
+                TopKSelector.InsertCandidate(score, i, scoresSpan, indicesSpan, ref selectedCount, effectiveK);
             }
 
-            // Simple sort based on scores descending. For ultra-large sets, QuickSelect is better,
-            // but Array.Sort is sufficiently fast for typical local vector DBs in memory.
-            Array.Sort(scores, indices, 0, count, Comparer<float>.Create((a, b) => b.CompareTo(a)));
-
-            var results = new List<ScoredChunk>(topK);
-            for (int i = 0; i < Math.Min(topK, count); i++)
+            var results = new List<ScoredChunk>(selectedCount);
+            for (int i = 0; i < selectedCount; i++)
             {
-                int originalIndex = indices[i];
+                int originalIndex = indicesSpan[i];
                 string id = vectorIdsRef[originalIndex];
                 if (_storage.TryGetValue(id, out var chunk))
                 {
-                    results.Add(new ScoredChunk(chunk, scores[i]));
+                    results.Add(new ScoredChunk(chunk, scoresSpan[i]));
                 }
             }
 
@@ -105,8 +149,8 @@ public sealed class SimdLocalVectorDatabase : IVectorDatabase
         }
         finally
         {
-            ArrayPool<float>.Shared.Return(scores);
-            ArrayPool<int>.Shared.Return(indices);
+            ArrayPool<float>.Shared.Return(topScores);
+            ArrayPool<int>.Shared.Return(topIndices);
         }
     }
 }

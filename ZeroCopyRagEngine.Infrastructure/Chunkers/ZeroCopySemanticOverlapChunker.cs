@@ -9,9 +9,8 @@ public sealed class ZeroCopySemanticOverlapChunker : ITextChunker
 {
     public IEnumerable<ReadOnlyMemory<char>> ChunkText(ReadOnlyMemory<char> text, int maxTokens, int overlapTokens)
     {
-        // Approximation: 1 token ~= 4 chars
-        int maxChars = maxTokens * 4;
-        int overlapChars = overlapTokens * 4;
+        int maxChars = Math.Max(4, maxTokens * 4);
+        int overlapChars = Math.Clamp(overlapTokens * 4, 0, maxChars - 1);
 
         if (text.Length <= maxChars)
         {
@@ -19,8 +18,6 @@ public sealed class ZeroCopySemanticOverlapChunker : ITextChunker
             yield break;
         }
 
-        // Use ArrayPool<Range> to perform all index calculations with 0-byte GC allocation
-        // before yielding the results.
         int estimatedChunks = (text.Length / Math.Max(1, maxChars - overlapChars)) + 2;
         Range[] ranges = ArrayPool<Range>.Shared.Rent(estimatedChunks);
         int rangeCount = 0;
@@ -39,13 +36,12 @@ public sealed class ZeroCopySemanticOverlapChunker : ITextChunker
                     int lastPeriod = window.LastIndexOf('.');
                     int lastSpace = window.LastIndexOf(' ');
 
-                    if (lastPeriod > currentChunkSize * 0.7) // Prefer sentence boundary
+                    if (lastPeriod > currentChunkSize * 0.7)
                         currentChunkSize = lastPeriod + 1;
-                    else if (lastSpace > currentChunkSize * 0.7) // Fallback to word boundary
+                    else if (lastSpace > currentChunkSize * 0.7)
                         currentChunkSize = lastSpace + 1;
                 }
 
-                // Resize array if necessary (should be extremely rare with correct estimation)
                 if (rangeCount >= ranges.Length)
                 {
                     var newRanges = ArrayPool<Range>.Shared.Rent(ranges.Length * 2);
@@ -62,8 +58,6 @@ public sealed class ZeroCopySemanticOverlapChunker : ITextChunker
                 currentIndex += Math.Max(1, currentChunkSize - overlapChars);
             }
 
-            // Yield the pre-calculated memory slices. 
-            // Yielding allocates a state machine once per method call, but the loop itself is 0 allocation.
             for (int i = 0; i < rangeCount; i++)
             {
                 var r = ranges[i];
@@ -74,5 +68,52 @@ public sealed class ZeroCopySemanticOverlapChunker : ITextChunker
         {
             ArrayPool<Range>.Shared.Return(ranges);
         }
+    }
+
+    /// <summary>
+    /// Computes chunk ranges directly into a caller-supplied span with strictly 0-byte heap allocation.
+    /// </summary>
+    public int ChunkTextSpan(ReadOnlySpan<char> text, int maxTokens, int overlapTokens, Span<Range> destination)
+    {
+        int maxChars = Math.Max(4, maxTokens * 4);
+        int overlapChars = Math.Clamp(overlapTokens * 4, 0, maxChars - 1);
+
+        if (text.Length == 0 || destination.Length == 0)
+            return 0;
+
+        if (text.Length <= maxChars)
+        {
+            destination[0] = new Range(0, text.Length);
+            return 1;
+        }
+
+        int rangeCount = 0;
+        int currentIndex = 0;
+        while (currentIndex < text.Length && rangeCount < destination.Length)
+        {
+            int remaining = text.Length - currentIndex;
+            int currentChunkSize = Math.Min(maxChars, remaining);
+
+            if (currentIndex + currentChunkSize < text.Length)
+            {
+                ReadOnlySpan<char> window = text.Slice(currentIndex, currentChunkSize);
+                int lastPeriod = window.LastIndexOf('.');
+                int lastSpace = window.LastIndexOf(' ');
+
+                if (lastPeriod > currentChunkSize * 0.7)
+                    currentChunkSize = lastPeriod + 1;
+                else if (lastSpace > currentChunkSize * 0.7)
+                    currentChunkSize = lastSpace + 1;
+            }
+
+            destination[rangeCount++] = new Range(currentIndex, currentIndex + currentChunkSize);
+
+            if (currentIndex + currentChunkSize >= text.Length)
+                break;
+
+            currentIndex += Math.Max(1, currentChunkSize - overlapChars);
+        }
+
+        return rangeCount;
     }
 }

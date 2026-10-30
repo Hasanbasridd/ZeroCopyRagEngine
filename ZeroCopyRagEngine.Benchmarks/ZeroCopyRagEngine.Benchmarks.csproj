@@ -2,11 +2,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ZeroCopyRagEngine.Domain\ZeroCopyRagEngine.Domain.csproj" />
+    <ProjectReference Include="..\ZeroCopyRagEngine.Application\ZeroCopyRagEngine.Application.csproj" />
     <ProjectReference Include="..\ZeroCopyRagEngine.Infrastructure\ZeroCopyRagEngine.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" Version="1.0.2" />
   </ItemGroup>
 
   <PropertyGroup>
