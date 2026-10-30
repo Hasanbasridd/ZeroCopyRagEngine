@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using ZeroCopyRagEngine.Application.Telemetry;
 using ZeroCopyRagEngine.Domain.Entities;
 using ZeroCopyRagEngine.Domain.Ports;
 
@@ -36,6 +38,13 @@ public sealed class HybridRetrievalService
         int candidateMultiplier = 3,
         CancellationToken cancellationToken = default)
     {
+        using var activity = RagTelemetry.ActivitySource.StartActivity("HybridRetrievalService.Retrieve");
+        activity?.SetTag("rag.top_k", topK);
+        activity?.SetTag("rag.hybrid_enabled", _bm25Index is not null);
+        activity?.SetTag("rag.rerank_enabled", _reranker is not null);
+
+        long startTimestamp = Stopwatch.GetTimestamp();
+
         int candidatePoolSize = Math.Max(topK, topK * candidateMultiplier);
         float[] queryVector = await _embeddingService.GenerateEmbeddingAsync(query.AsMemory(), cancellationToken);
 
@@ -73,6 +82,11 @@ public sealed class HybridRetrievalService
             finalResults = fused;
         }
 
+        double elapsedMs = Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds;
+        RagTelemetry.RetrievalLatencyMs.Record(elapsedMs);
+        activity?.SetTag("rag.results_count", finalResults.Count);
+
         return finalResults;
     }
 }
+
